@@ -1,0 +1,9 @@
+# Operating system generated files and directories
+.DS_Store
+Thumbs.db
+
+# IDE files and directories
+.idea
+
+# Vendors
+node_modules
