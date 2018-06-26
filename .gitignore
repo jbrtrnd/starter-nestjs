@@ -7,3 +7,9 @@ Thumbs.db
 
 # Vendors
 node_modules
+
+# Build folder
+dist
+
+# Local config
+ormconfig.json

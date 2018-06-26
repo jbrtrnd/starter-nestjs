@@ -2,7 +2,7 @@
 
 ## Description
 
-Project starter using NestJS and TypeORM
+Project starter using NestJS and TypeORM (with PostgreSQL)
 
 ## Installation
 
