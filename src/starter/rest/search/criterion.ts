@@ -47,6 +47,9 @@ export default class Criterion {
             case 'lte':
                 right = '<= :' + this.parameter;
                 break;
+            case 'like':
+                right = 'LIKE :' + this.parameter;
+                break;
             case 'in':
                 right = ' IN(:...' + this.parameter + ')';
                 break;

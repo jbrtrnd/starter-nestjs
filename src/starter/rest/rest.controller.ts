@@ -12,6 +12,7 @@ import { Connection, Repository } from 'typeorm';
 import RestEntity from './rest.entity';
 import RestRepository from './rest.repository';
 import Criterion from './search/criterion';
+import Order from './search/order';
 import Pager from './search/pager';
 
 /**
@@ -57,12 +58,32 @@ export default abstract class RestController<T extends RestEntity> {
         // Pagination
         const page   = query.page || query._p;
         const number = query.per_page || query._pp;
-        const pager = new Pager(page, number);
+        const pager  = new Pager(page, number);
+
+        // Sort order
+        const sort   = query.sort || query._s;
+        const orders = [];
+        if (sort) {
+            sort.split(',').forEach((part) => {
+                let order = 'asc';
+                let property = part;
+
+                if (property[0] === '-') {
+                    order = 'desc';
+                    property = property.substr( 1);
+                }
+
+                orders.push(new Order(
+                    property,
+                    order,
+                ));
+            });
+        }
 
         // Filtering
         const criteria = [];
         for (const column in query) {
-            if (query.hasOwnProperty(column) && ['page', '_p', 'per_page', '_pp'].indexOf(column) === -1) {
+            if (query.hasOwnProperty(column) && ['sort', '_s', 'page', '_p', 'per_page', '_pp', 'mode', '_m'].indexOf(column) === -1) {
                 const value = query[column];
                 const [property, operator] = column.split('-');
 
@@ -74,8 +95,21 @@ export default abstract class RestController<T extends RestEntity> {
             }
         }
 
-        this.repository.search(criteria, pager).then((rows: T[]) => {
-            response.json(rows);
+        // Mode
+        let mode = query.mode || query._m;
+        if (mode !== 'and' && mode !== 'or') {
+            mode = 'and';
+        }
+
+        this.repository.search(criteria, orders, mode, pager).then((rows: T[]) => {
+            if (page && number) {
+                this.repository.search(criteria, [], mode).then((total: T[]) => {
+                    response.header('X-REST-TOTAL', total.length);
+                    response.json(rows);
+                });
+            } else {
+                response.json(rows);
+            }
         }).catch(() => {
             response.status(HttpStatus.INTERNAL_SERVER_ERROR);
             response.send();
