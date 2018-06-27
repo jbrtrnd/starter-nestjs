@@ -1,4 +1,3 @@
-///<reference path="../../../node_modules/typeorm/repository/Repository.d.ts"/>
 import {
     Controller,
     Delete,
@@ -9,8 +8,9 @@ import {
     Request,
     Response,
 } from '@nestjs/common';
-import { Connection, Repository } from 'typeorm';
+import { Connection, DeepPartial, Repository } from 'typeorm';
 import RestEntity from './rest.entity';
+import any = jasmine.any;
 
 /**
  * Basic starter REST controller.
@@ -103,7 +103,8 @@ export default abstract class RestController<T extends RestEntity> {
     @Post()
     create(@Request() request, @Response() response): void {
         const body = request.body;
-        const row = new this.entityClass();
+        // NOTE : row is defined as "any" to avoid type check error caused by TS
+        const row: any = new this.entityClass();
 
         this.repository.merge(row, body);
 
@@ -146,7 +147,8 @@ export default abstract class RestController<T extends RestEntity> {
         const params = request.params;
         const body = request.body;
 
-        this.repository.findOne(params.id).then(row => {
+        // NOTE : row is defined as "any" to avoid type check error caused by TS
+        this.repository.findOne(params.id).then((row: any) => {
             if (!row) {
                 response.status(HttpStatus.NOT_FOUND);
                 response.send();
@@ -171,7 +173,7 @@ export default abstract class RestController<T extends RestEntity> {
     delete(@Request() request, @Response() response) {
         const params = request.params;
 
-        this.repository.findOne(params.id).then(row => {
+        this.repository.findOne(params.id).then((row: T) => {
             if (!row) {
                 response.status(HttpStatus.NOT_FOUND);
                 response.send();
