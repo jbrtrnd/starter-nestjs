@@ -1,4 +1,9 @@
-import { BeforeInsert, BeforeUpdate, Column } from 'typeorm';
+import {
+    BeforeInsert,
+    BeforeUpdate,
+    Column,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 
 /**
  * Basic starter entity, managed by all the REST system.
@@ -6,6 +11,13 @@ import { BeforeInsert, BeforeUpdate, Column } from 'typeorm';
  * @author Jules Bertrand <jules.brtrnd@gmail.com>
  */
 export default abstract class RestEntity {
+    /**
+     * Entity primary key.
+     *
+     * @type {number}
+     */
+    @PrimaryGeneratedColumn() id: number;
+
     /**
      * Creation date of the entity.
      *
@@ -27,7 +39,7 @@ export default abstract class RestEntity {
      * the created property to the current date.
      */
     @BeforeInsert()
-    protected beforeInsert(): void {
+    beforeInsert(): void {
         this.created = new Date();
     }
 
@@ -36,7 +48,7 @@ export default abstract class RestEntity {
      * created property to the current date.
      */
     @BeforeUpdate()
-    protected beforeUpdate(): void {
+    beforeUpdate(): void {
         this.updated = new Date();
     }
 }
