@@ -8,9 +8,11 @@ import {
     Request,
     Response,
 } from '@nestjs/common';
-import { Connection, DeepPartial, Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import RestEntity from './rest.entity';
-import any = jasmine.any;
+import RestRepository from './rest.repository';
+import Criterion from './search/criterion';
+import Pager from './search/pager';
 
 /**
  * Basic starter REST controller.
@@ -26,7 +28,7 @@ export default abstract class RestController<T extends RestEntity> {
      * Entity repository.
      * @type { Repository }
      */
-    protected repository: Repository<T>;
+    protected repository: RestRepository<T>;
 
     protected constructor(
         /**
@@ -35,17 +37,49 @@ export default abstract class RestController<T extends RestEntity> {
          */
         protected entityClass: new () => T,
         /**
+         * Repository class.
+         * @type { RestRepository }
+         */
+        protected repositoryClass: new () => RestRepository<T>,
+        /**
          * Entity manager.
          * @type { Connection }
          */
         protected entityManager: Connection,
     ) {
-        this.repository = this.entityManager.getRepository<T>(entityClass);
+        this.repository = this.entityManager.getCustomRepository(repositoryClass);
     }
 
     @Get()
-    search() {
-        return this.repository.find();
+    search(@Request() request, @Response() response) {
+        const query = request.query;
+
+        // Pagination
+        const page   = query.page || query._p;
+        const number = query.per_page || query._pp;
+        const pager = new Pager(page, number);
+
+        // Filtering
+        const criteria = [];
+        for (const column in query) {
+            if (query.hasOwnProperty(column) && ['page', '_p', 'per_page', '_pp'].indexOf(column) === -1) {
+                const value = query[column];
+                const [property, operator] = column.split('-');
+
+                criteria.push(new Criterion(
+                    property,
+                    operator,
+                    value,
+                ));
+            }
+        }
+
+        this.repository.search(criteria, pager).then((rows: T[]) => {
+            response.json(rows);
+        }).catch(() => {
+            response.status(HttpStatus.INTERNAL_SERVER_ERROR);
+            response.send();
+        });
     }
 
     /**

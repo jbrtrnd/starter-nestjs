@@ -4,8 +4,6 @@ import { ExampleModule } from './example/example.module';
 import { StarterModule } from './starter/starter.module';
 import environment from './environment';
 
-console.log(environment);
-
 @Module({
     imports: [TypeOrmModule.forRoot(environment.typeorm), StarterModule, ExampleModule],
     controllers: [],
