@@ -4,27 +4,58 @@
  * @author Jules Bertrand <jules.brtrnd@gmail.com>
  */
 export default class Criterion {
+    /**
+     * Parameter identifier.
+     * @type {string}
+     */
     parameter: string;
+    /**
+     * Property to test.
+     * @type {string}
+     */
     property: string;
+    /**
+     * Operator to use.
+     * @type {string}
+     */
     operator: string;
+    /**
+     * Value to test.
+     * @type {any}
+     */
     value: any;
 
+    /**
+     * @param {string} property
+     * @param {string} operator
+     * @param {any}     value
+     */
     constructor(property: string, operator: string, value: any) {
         this.property = property;
         this.operator = operator || 'eq';
         this.value = value;
 
-        this.parameter = this.generateParameter();
+        this.parameter = this.generateRandom();
 
         if (this.operator === 'in' || this.operator === 'notin') {
             this.value = this.value.split(',');
         }
     }
 
-    protected generateParameter(): string {
+    /**
+     * Generate a random string.
+     *
+     * @returns {string}
+     */
+    protected generateRandom(): string {
         return (new Date().getTime() + Math.floor(Math.random() * 10000 + 1)).toString(16);
     }
 
+    /**
+     * Convert the criterion to SQL format.
+     *
+     * @returns {string}
+     */
     toSQL(): string {
         const left = this.property;
         let right = null;

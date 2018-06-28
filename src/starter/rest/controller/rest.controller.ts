@@ -2,9 +2,9 @@ import { Controller, Delete, Get, HttpStatus, Post, Put, Request, Response } fro
 import RestEntity from '../entity/rest.entity';
 import FieldValidationException from '../exception/field-validation.exception';
 import NotFoundException from '../exception/not-found.exception';
-import Criterion from '../repository/search/criterion';
-import Order from '../repository/search/order';
-import Pager from '../repository/search/pager';
+import Criterion from '../service/search/criterion';
+import Order from '../service/search/order';
+import Pager from '../service/search/pager';
 import RestService from '../service/rest.service';
 
 /**
@@ -17,13 +17,12 @@ import RestService from '../service/rest.service';
  */
 @Controller()
 export default abstract class RestController<T extends RestEntity> {
-    protected constructor(
-        /**
-         * Entity service.
-         * @type { RestService }
-         */
-        protected service: RestService<T>,
-    ) {}
+    /**
+     * Entity REST service.
+     *
+     * @param {RestService<RestEntity>} service
+     */
+    protected constructor(protected service: RestService<T>) {}
 
     /**
      * Search in the complete list of entities.
@@ -62,8 +61,8 @@ export default abstract class RestController<T extends RestEntity> {
      * By default, all entities will be retrieved, you can pass query parameters to limit or filter results
      * A custom response header named "X-REST-TOTAL" will contain the total number of rows.
      *
-     * @param request  {Request}
-     * @param response {Response}
+     * @param {Request}  request
+     * @param {Response} response
      */
     @Get()
     search(@Request() request, @Response() response) {
@@ -139,8 +138,8 @@ export default abstract class RestController<T extends RestEntity> {
      * - 404 : entity not found
      * - 500 : internal error
      *
-     * @param request  {Request}
-     * @param response {Response}
+     * @param {Request}  request
+     * @param {Response} response
      */
     @Get(':id')
     get(@Request() request, @Response() response) {
@@ -173,8 +172,8 @@ export default abstract class RestController<T extends RestEntity> {
      * - 422 : fields validation failed
      * - 500 : internal error
      *
-     * @param request  {Request}
-     * @param response {Response}
+     * @param {Request}  request
+     * @param {Response} response
      */
     @Post()
     create(@Request() request, @Response() response): void {
@@ -208,8 +207,8 @@ export default abstract class RestController<T extends RestEntity> {
      * - 422 : fields validation failed
      * - 500 : internal error
      *
-     * @param request  {Request}
-     * @param response {Response}
+     * @param {Request}  request
+     * @param {Response} response
      */
     @Put(':id')
     update(@Request() request, @Response() response) {
@@ -237,8 +236,8 @@ export default abstract class RestController<T extends RestEntity> {
      * - 404 : entity not found
      * - 500 : internal error
      *
-     * @param request  {Request}
-     * @param response {Response}
+     * @param {Request}  request
+     * @param {Response} response
      */
     @Delete(':id')
     delete(@Request() request, @Response() response) {

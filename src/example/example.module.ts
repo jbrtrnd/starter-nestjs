@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
+import { StarterModule } from '../starter/starter.module';
 import BarController from './controller/bar.controller';
 import FooController from './controller/foo.controller';
-import BarService from './service/bar.service';
-import FooService from './service/foo.service';
-
 @Module({
-    imports: [],
+    imports: [StarterModule],
     controllers: [BarController, FooController],
-    providers: [BarService, FooService],
+    providers: [],
 })
 export class ExampleModule {}

@@ -5,7 +5,7 @@ import { StarterModule } from './starter/starter.module';
 import environment from './environment';
 
 @Module({
-    imports: [TypeOrmModule.forRoot(environment.typeorm), StarterModule, ExampleModule],
+    imports: [TypeOrmModule.forRoot(environment.typeorm), ExampleModule],
     controllers: [],
     providers: [],
 })
