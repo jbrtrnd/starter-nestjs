@@ -2,6 +2,7 @@ import { Connection, Repository } from 'typeorm';
 import RestEntity from '../entity/rest.entity';
 import NotFoundException from '../exception/not-found.exception';
 import Criterion from './search/criterion';
+import Join from './search/join';
 import Order from './search/order';
 import Pager from './search/pager';
 
@@ -30,6 +31,7 @@ export default class RestService<T extends RestEntity> {
      *
      * @param {Criterion[]}  criteria
      * @param {Order[]}      orders
+     * @param {Join[]}       joins
      * @param {"and" | "or"} mode
      * @param {Pager}        pager
      *
@@ -38,6 +40,7 @@ export default class RestService<T extends RestEntity> {
     search(
         criteria: Criterion[] = [],
         orders: Order[] = [],
+        joins: Join[] = [],
         mode: 'and' | 'or' = 'and',
         pager: Pager = null,
     ): Promise<T[]> {
@@ -52,6 +55,11 @@ export default class RestService<T extends RestEntity> {
 
         orders.forEach((order: Order) => {
             queryBuilder.addOrderBy(order.property, order.isASC() ? 'ASC' : 'DESC');
+        });
+
+        joins.forEach((join: Join) => {
+            const fn = join.type + 'Join';
+            queryBuilder[fn](join.path, join.name);
         });
 
         if (pager) {

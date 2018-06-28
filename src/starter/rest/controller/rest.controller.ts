@@ -3,6 +3,7 @@ import RestEntity from '../entity/rest.entity';
 import FieldValidationException from '../exception/field-validation.exception';
 import NotFoundException from '../exception/not-found.exception';
 import Criterion from '../service/search/criterion';
+import Join from '../service/search/join';
 import Order from '../service/search/order';
 import Pager from '../service/search/pager';
 import RestService from '../service/rest.service';
@@ -34,7 +35,7 @@ export default abstract class RestController<T extends RestEntity> {
      * - 200 : it's ok, entities retrieved
      * - 500 : internal error
      *
-     * Query parameters :
+     * Query parameters (only short aliases are valid now) :
      * - "page"
      * index of the page
      * alias for : "_p"
@@ -69,12 +70,12 @@ export default abstract class RestController<T extends RestEntity> {
         const query = request.query;
 
         // Pagination
-        const page = query.page || query._p;
-        const number = query.per_page || query._pp;
+        const page = query._p;
+        const number = query._pp;
         const pager = new Pager(page, number);
 
         // Sort order
-        const sort = query.sort || query._s;
+        const sort = query._s;
         const orders = [];
         if (sort) {
             sort.split(',').forEach(part => {
@@ -95,7 +96,7 @@ export default abstract class RestController<T extends RestEntity> {
         for (const column in query) {
             if (
                 query.hasOwnProperty(column) &&
-                ['sort', '_s', 'page', '_p', 'per_page', '_pp', 'mode', '_m'].indexOf(column) === -1
+                ['_s', '_p', '_pp', '_m', '_j'].indexOf(column) === -1
             ) {
                 const value = query[column];
                 const [property, operator] = column.split('-');
@@ -105,16 +106,26 @@ export default abstract class RestController<T extends RestEntity> {
         }
 
         // Mode
-        let mode = query.mode || query._m;
+        let mode = query._m;
         if (mode !== 'and' && mode !== 'or') {
             mode = 'and';
         }
 
+        // Joins
+        const joinsParts = query._j;
+        const joins = [];
+        if (joinsParts) {
+            joinsParts.split(',').forEach(part => {
+                const [join, type] = part.split('-');
+                joins.push(new Join(join, type));
+            });
+        }
+
         this.service
-            .search(criteria, orders, mode, pager)
+            .search(criteria, orders, joins, mode, pager)
             .then((rows: T[]) => {
                 if (page && number) {
-                    this.service.search(criteria, [], mode).then((total: T[]) => {
+                    this.service.search(criteria, [], joins, mode).then((total: T[]) => {
                         response.header('X-REST-TOTAL', total.length);
                         response.json(rows);
                     });
