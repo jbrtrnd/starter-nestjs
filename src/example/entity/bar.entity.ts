@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import RestEntity from '../../starter/rest/rest.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import RestEntity from '../../starter/rest/entity/rest.entity';
+import Foo from './foo.entity';
 
 @Entity()
 export default class Bar extends RestEntity {
@@ -12,4 +13,7 @@ export default class Bar extends RestEntity {
      * @type {string}
      */
     @Column() baz: string;
+
+    @OneToMany(type => Foo, foo => foo.bar)
+    foos: Foo[];
 }

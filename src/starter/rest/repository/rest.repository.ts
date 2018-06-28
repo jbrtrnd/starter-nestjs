@@ -1,11 +1,15 @@
 import { Repository } from 'typeorm';
-import RestEntity from './rest.entity';
+import RestEntity from '../entity/rest.entity';
 import Criterion from './search/criterion';
 import Order from './search/order';
 import Pager from './search/pager';
 
+/**
+ * Basic REST entity custom repository.
+ *
+ * @author Jules Bertrand <jules.brtrnd@gmail.com>
+ */
 export default class RestRepository<T extends RestEntity> extends Repository<T> {
-
     search(criteria: Criterion[] = [], orders: Order[] = [], mode: 'and' | 'or' = 'and', pager: Pager = null) {
         const queryBuilder = this.createQueryBuilder('o');
         queryBuilder.select('o');
@@ -17,7 +21,7 @@ export default class RestRepository<T extends RestEntity> extends Repository<T> 
         });
 
         orders.forEach((order: Order) => {
-            queryBuilder.addOrderBy(order.property, (order.isASC() ? 'ASC' : 'DESC'));
+            queryBuilder.addOrderBy(order.property, order.isASC() ? 'ASC' : 'DESC');
         });
 
         if (pager) {

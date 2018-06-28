@@ -1,12 +1,11 @@
 import { Controller } from '@nestjs/common';
-import { Connection } from 'typeorm';
-import RestController from '../../starter/rest/rest.controller';
+import RestController from '../../starter/rest/controller/rest.controller';
 import Bar from '../entity/bar.entity';
-import BarRepository from '../repository/bar.repository';
+import BarService from '../service/bar.service';
 
 @Controller('bar')
 export default class BarController extends RestController<Bar> {
-    constructor(protected entityManager: Connection) {
-        super(Bar, BarRepository, entityManager);
+    constructor(protected service: BarService) {
+        super(service);
     }
 }

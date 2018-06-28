@@ -1,9 +1,4 @@
-import {
-    BeforeInsert,
-    BeforeUpdate,
-    Column,
-    PrimaryGeneratedColumn,
-} from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * Basic starter entity, managed by all the REST system.
@@ -51,4 +46,9 @@ export default abstract class RestEntity {
     beforeUpdate(): void {
         this.updated = new Date();
     }
+
+    /**
+     * Convert the current object into json.
+     */
+    //abstract toJson(): any;
 }

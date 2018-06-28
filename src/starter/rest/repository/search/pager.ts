@@ -17,7 +17,7 @@ export default class Pager {
                 perPage = 25;
             }
 
-            this.limit  = perPage;
+            this.limit = perPage;
             this.offset = perPage * (page - 1);
         }
     }

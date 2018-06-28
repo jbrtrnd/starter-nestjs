@@ -1,5 +1,5 @@
 import { EntityRepository } from 'typeorm';
-import RestRepository from '../../starter/rest/rest.repository';
+import RestRepository from '../../starter/rest/repository/rest.repository';
 import Bar from '../entity/bar.entity';
 
 @EntityRepository(Bar)

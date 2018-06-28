@@ -12,7 +12,7 @@ export default class Criterion {
     constructor(property: string, operator: string, value: any) {
         this.property = property;
         this.operator = operator || 'eq';
-        this.value    = value;
+        this.value = value;
 
         this.parameter = this.generateParameter();
 
@@ -22,12 +22,12 @@ export default class Criterion {
     }
 
     protected generateParameter(): string {
-        return (new Date().getTime() + Math.floor((Math.random() * 10000) + 1)).toString(16);
+        return (new Date().getTime() + Math.floor(Math.random() * 10000 + 1)).toString(16);
     }
 
     toSQL(): string {
         const left = this.property;
-        let right  = null;
+        let right = null;
         switch (this.operator) {
             case 'eq':
                 right = '= :' + this.parameter;
