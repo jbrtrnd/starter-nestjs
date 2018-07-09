@@ -30,6 +30,13 @@ export default abstract class RestEntity {
     updated: Date | null;
 
     /**
+     * Container for functions results.
+     *
+     * @type {Object}
+     */
+    _fn: {};
+
+    /**
      * TypeORM listener, executed before the insertion of the entity. Will set
      * the created property to the current date.
      */
@@ -46,9 +53,4 @@ export default abstract class RestEntity {
     beforeUpdate(): void {
         this.updated = new Date();
     }
-
-    /**
-     * Convert the current object into json.
-     */
-    //abstract toJson(): any;
 }

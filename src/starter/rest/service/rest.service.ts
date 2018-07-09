@@ -30,6 +30,7 @@ export default class RestService<T extends RestEntity> {
      * Search in the complete list of entities.
      *
      * @param {Criterion[]}  criteria
+     * @param {string[]}     embeds
      * @param {Order[]}      orders
      * @param {Join[]}       joins
      * @param {"and" | "or"} mode
@@ -39,16 +40,24 @@ export default class RestService<T extends RestEntity> {
      */
     search(
         criteria: Criterion[] = [],
+        embeds: string[] = [],
         orders: Order[] = [],
         joins: Join[] = [],
-        mode: 'and' | 'or' = 'and',
+        mode: string = 'and',
         pager: Pager = null,
     ): Promise<T[]> {
         const queryBuilder = this.repository.createQueryBuilder('o');
         queryBuilder.select('o');
 
+        embeds.forEach((property: string) => {
+            queryBuilder.addSelect([property]);
+        });
+
         const modeFn = mode + 'Where';
         criteria.forEach((criterion: Criterion) => {
+            if (!criterion.hasPrefix()) {
+                criterion.addPrefix('o');
+            }
             queryBuilder[modeFn](criterion.toSQL());
             queryBuilder.setParameter(criterion.parameter, criterion.value);
         });
@@ -73,16 +82,18 @@ export default class RestService<T extends RestEntity> {
     /**
      * Retrieve an entity by its primary key value.
      *
-     * @param {number} id
+     * @param {number}   id
+     * @param {string[]} embeds
+     * @param {Join[]}   joins
      *
      * @returns {Promise<RestEntity>}
      */
-    get(id: number): Promise<T> {
-        return this.repository.findOne(id).then((row: T) => {
-            if (!row) {
+    get(id: number, embeds: string[] = [], joins: Join[] = []): Promise<T> {
+        return this.search([new Criterion('id', 'eq', id)], embeds, [], joins).then((rows: T[]) => {
+            if (rows.length !== 1) {
                 throw new NotFoundException();
             }
-            return row;
+            return rows[0];
         });
     }
 
@@ -115,15 +126,17 @@ export default class RestService<T extends RestEntity> {
     /**
      * Update an entity by its primary identifier.
      *
-     * @param {number} id
-     * @param {any}    data
+     * @param {number}   id
+     * @param {any}      data
+     * @param {string[]} embeds
+     * @param {Join[]}   joins
      *
      * @returns {Promise<RestEntity>}
      */
-    update(id: number, data: any): Promise<T> {
-        return this.get(id).then((entity: T) => {
+    update(id: number, data: any, embeds: string[] = [], joins: Join[] = []): Promise<T> {
+        return this.get(id, embeds, joins).then((entity: T) => {
             this.repository.merge(entity, data);
-
+            console.log(entity);
             // @TODO Fields validation --> send FieldValidationException
             return this.save(entity);
         });

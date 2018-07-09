@@ -17,4 +17,8 @@ export default class Foo extends RestEntity {
     @ManyToOne(type => Bar, bar => bar.foos)
     @JoinColumn({ name: 'bar_id' })
     bar: Bar;
+
+    test(): string {
+        return 'yolo';
+    }
 }

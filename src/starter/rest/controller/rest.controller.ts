@@ -52,12 +52,24 @@ export default abstract class RestController<T extends RestEntity> {
      * perform a "and" or "or" query (default to "and")
      * alias for : "_m"
      *
+     * - "join"
+     * add joins to the query (will not select fields) alias used by the query builder will be the last part of the
+     * join path
+     * alias for : "_j"
+     *
+     * - "embed"
+     * select more properties than the default ones
+     * alias for : "_e"
+     *
+     * - "functions"
+     * call function of entities and put the result in the "_fn" container
+     * alias for : "_fn"
+     *
      * - "<property-name>"
      * filter by any entity property (operator will be equal by default) (ex: field1=value)
      *
      * - "<property-name>-<operator>"
      * filter by any entity property and set the operator to apply
-     * see doctrine expr operators
      *
      * By default, all entities will be retrieved, you can pass query parameters to limit or filter results
      * A custom response header named "X-REST-TOTAL" will contain the total number of rows.
@@ -69,67 +81,24 @@ export default abstract class RestController<T extends RestEntity> {
     search(@Request() request, @Response() response) {
         const query = request.query;
 
-        // Pagination
-        const page = query._p;
-        const number = query._pp;
-        const pager = new Pager(page, number);
-
-        // Sort order
-        const sort = query._s;
-        const orders = [];
-        if (sort) {
-            sort.split(',').forEach(part => {
-                let order = 'asc';
-                let property = part;
-
-                if (property[0] === '-') {
-                    order = 'desc';
-                    property = property.substr(1);
-                }
-
-                orders.push(new Order(property, order));
-            });
-        }
-
-        // Filtering
-        const criteria = [];
-        for (const column in query) {
-            if (
-                query.hasOwnProperty(column) &&
-                ['_s', '_p', '_pp', '_m', '_j'].indexOf(column) === -1
-            ) {
-                const value = query[column];
-                const [property, operator] = column.split('-');
-
-                criteria.push(new Criterion(property, operator, value));
-            }
-        }
-
-        // Mode
-        let mode = query._m;
-        if (mode !== 'and' && mode !== 'or') {
-            mode = 'and';
-        }
-
-        // Joins
-        const joinsParts = query._j;
-        const joins = [];
-        if (joinsParts) {
-            joinsParts.split(',').forEach(part => {
-                const [join, type] = part.split('-');
-                joins.push(new Join(join, type));
-            });
-        }
+        const rest = this.getRESTParameters(query);
 
         this.service
-            .search(criteria, orders, joins, mode, pager)
+            .search(rest.criteria, rest.embeds, rest.orders, rest.joins, rest.mode, rest.pager)
             .then((rows: T[]) => {
-                if (page && number) {
-                    this.service.search(criteria, [], joins, mode).then((total: T[]) => {
+                if (rest.pager.offset && rest.pager.limit) {
+                    this.service.search(rest.criteria, [], [], rest.joins, rest.mode).then((total: T[]) => {
                         response.header('X-REST-TOTAL', total.length);
                         response.json(rows);
                     });
                 } else {
+                    if (rest.functions.length > 0) {
+                        rows.forEach(row => {
+                            rest.functions.forEach(fn => {
+                                this.fillFnProperty(row, fn);
+                            });
+                        });
+                    }
                     response.json(rows);
                 }
             })
@@ -155,9 +124,12 @@ export default abstract class RestController<T extends RestEntity> {
     @Get(':id')
     get(@Request() request, @Response() response) {
         const params = request.params;
+        const query = request.query;
+
+        const rest = this.getRESTParameters(query);
 
         this.service
-            .get(params.id)
+            .get(params.id, rest.embeds, rest.joins)
             .then((row: T) => {
                 response.json(row);
             })
@@ -225,9 +197,12 @@ export default abstract class RestController<T extends RestEntity> {
     update(@Request() request, @Response() response) {
         const params = request.params;
         const body = request.body;
+        const query = request.query;
+
+        const rest = this.getRESTParameters(query);
 
         this.service
-            .update(params.id, body)
+            .update(params.id, body, rest.embeds, rest.joins)
             .then((row: T) => {
                 response.json(row);
             })
@@ -265,6 +240,12 @@ export default abstract class RestController<T extends RestEntity> {
             });
     }
 
+    /**
+     * Manage request error from exception and send the response with the dedicated error code.
+     *
+     * @param {Error}    error
+     * @param {Response} response
+     */
     protected errorHandler(error: Error, response): void {
         if (error instanceof FieldValidationException) {
             response.status(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -275,5 +256,121 @@ export default abstract class RestController<T extends RestEntity> {
         }
 
         response.send();
+    }
+
+    /**
+     * Retrieve and convert search query parameters to understandable parameters for the rest service.
+     *
+     * @param query
+     *
+     * @returns {{pager: Pager; orders: Order[]; criteria: Criterion[]; mode: string; joins: Join[]; embeds: string[]; functions: string[]}}
+     */
+    protected getRESTParameters(
+        query: any,
+    ): {
+        pager: Pager;
+        orders: Order[];
+        criteria: Criterion[];
+        mode: string;
+        joins: Join[];
+        embeds: string[];
+        functions: string[];
+    } {
+        const parameters = {
+            pager: null,
+            orders: [],
+            criteria: [],
+            mode: 'and',
+            joins: [],
+            embeds: [],
+            functions: [],
+        };
+
+        // Pagination
+        const page = query._p;
+        const number = query._pp;
+        parameters.pager = new Pager(page, number);
+
+        // Sort order
+        const sortParts = query._s;
+        if (sortParts) {
+            sortParts.split(',').forEach(part => {
+                let order = 'asc';
+                let property = part;
+
+                if (property[0] === '-') {
+                    order = 'desc';
+                    property = property.substr(1);
+                }
+
+                parameters.orders.push(new Order(property, order));
+            });
+        }
+
+        // Filtering
+        for (const column in query) {
+            if (query.hasOwnProperty(column) && ['_s', '_p', '_pp', '_m', '_j', '_e', '_fn'].indexOf(column) === -1) {
+                const value = query[column];
+                const [property, operator] = column.split('-');
+
+                parameters.criteria.push(new Criterion(property, operator, value));
+            }
+        }
+
+        // Mode
+        parameters.mode = query._m;
+        if (parameters.mode !== 'and' && parameters.mode !== 'or') {
+            parameters.mode = 'and';
+        }
+
+        // Joins
+        const joinsParts = query._j;
+        if (joinsParts) {
+            joinsParts.split(',').forEach(part => {
+                const [join, type] = part.split('-');
+                parameters.joins.push(new Join(join, type));
+            });
+        }
+
+        // Embed
+        const embedParts = query._e;
+        if (embedParts) {
+            parameters.embeds = embedParts.split(',');
+        }
+
+        // Functions
+        const functionsParts = query._fn;
+        if (functionsParts) {
+            parameters.functions = functionsParts.split(',');
+        }
+
+        return parameters;
+    }
+
+    /**
+     * Call a function of an entity and put the result in the _fn container.
+     *
+     * @param {RestEntity} row
+     * @param {string}     fn
+     */
+    protected fillFnProperty(row: RestEntity, fn: string): void {
+        if (typeof row._fn === 'undefined') {
+            row._fn = {};
+        }
+
+        if (fn.indexOf('.') > -1) {
+            const parts = fn.split('.');
+            const property = parts[0];
+            parts.shift();
+            if (Array.isArray(row[property])) {
+                row[property].forEach(subRow => {
+                    this.fillFnProperty(subRow, parts.join('.'));
+                });
+            } else {
+                this.fillFnProperty(row[property], parts.join('.'));
+            }
+        } else {
+            row._fn[fn] = row[fn]();
+        }
     }
 }

@@ -52,6 +52,24 @@ export default class Criterion {
     }
 
     /**
+     * Return if the property has a prefix (contains a dot).
+     *
+     * @returns {boolean}
+     */
+    hasPrefix(): boolean {
+        return this.property.indexOf('.') > -1;
+    }
+
+    /**
+     * Add a prefix to the property.
+     *
+     * @param {string} prefix
+     */
+    addPrefix(prefix: string): void {
+        this.property = prefix + '.' + this.property;
+    }
+
+    /**
      * Convert the criterion to SQL format.
      *
      * @returns {string}

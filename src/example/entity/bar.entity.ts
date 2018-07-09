@@ -16,4 +16,8 @@ export default class Bar extends RestEntity {
 
     @OneToMany(type => Foo, foo => foo.bar)
     foos: Foo[];
+
+    nb(): number {
+        return this.foos.length;
+    }
 }

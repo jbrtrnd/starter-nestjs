@@ -23,10 +23,10 @@ export default class Join {
         }
 
         switch (type) {
-            case 'l' :
+            case 'l':
                 this.type = 'left';
                 break;
-            case 'i' :
+            case 'i':
             default:
                 this.type = 'inner';
         }
