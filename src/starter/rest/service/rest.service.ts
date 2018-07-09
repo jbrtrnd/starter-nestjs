@@ -47,12 +47,22 @@ export default class RestService<T extends RestEntity> {
         pager: Pager = null,
     ): Promise<T[]> {
         const queryBuilder = this.repository.createQueryBuilder('o');
-        queryBuilder.select('o');
 
-        // @TODO : pouvoir selectionner les propriétés de l'entité de base /bar?_e=id
+        let firstSelect = 'o';
+        const selection = [];
         embeds.forEach((property: string) => {
-            queryBuilder.addSelect([property]);
+            if (property.indexOf('.') === -1) {
+                if (!joins.some(join => {
+                    return join.name === property;
+                })) {
+                    property = 'o.' + property;
+                    firstSelect = 'o.id';
+                }
+            }
+            selection.push(property);
         });
+        queryBuilder.select(firstSelect);
+        queryBuilder.addSelect(selection);
 
         const modeFn = mode + 'Where';
         criteria.forEach((criterion: Criterion) => {
