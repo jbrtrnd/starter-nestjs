@@ -49,6 +49,7 @@ export default class RestService<T extends RestEntity> {
         const queryBuilder = this.repository.createQueryBuilder('o');
         queryBuilder.select('o');
 
+        // @TODO : pouvoir selectionner les propriétés de l'entité de base /bar?_e=id
         embeds.forEach((property: string) => {
             queryBuilder.addSelect([property]);
         });
@@ -136,7 +137,7 @@ export default class RestService<T extends RestEntity> {
     update(id: number, data: any, embeds: string[] = [], joins: Join[] = []): Promise<T> {
         return this.get(id, embeds, joins).then((entity: T) => {
             this.repository.merge(entity, data);
-            console.log(entity);
+
             // @TODO Fields validation --> send FieldValidationException
             return this.save(entity);
         });

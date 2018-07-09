@@ -89,16 +89,11 @@ export default abstract class RestController<T extends RestEntity> {
                 if (rest.pager.offset && rest.pager.limit) {
                     this.service.search(rest.criteria, [], [], rest.joins, rest.mode).then((total: T[]) => {
                         response.header('X-REST-TOTAL', total.length);
+                        this.mutateRows(rows, rest.functions);
                         response.json(rows);
                     });
                 } else {
-                    if (rest.functions.length > 0) {
-                        rows.forEach(row => {
-                            rest.functions.forEach(fn => {
-                                this.fillFnProperty(row, fn);
-                            });
-                        });
-                    }
+                    this.mutateRows(rows, rest.functions);
                     response.json(rows);
                 }
             })
@@ -131,6 +126,7 @@ export default abstract class RestController<T extends RestEntity> {
         this.service
             .get(params.id, rest.embeds, rest.joins)
             .then((row: T) => {
+                this.mutateRows([row], rest.functions);
                 response.json(row);
             })
             .catch((error: Error) => {
@@ -204,6 +200,7 @@ export default abstract class RestController<T extends RestEntity> {
         this.service
             .update(params.id, body, rest.embeds, rest.joins)
             .then((row: T) => {
+                this.mutateRows([row], rest.functions);
                 response.json(row);
             })
             .catch((error: Error) => {
@@ -263,7 +260,7 @@ export default abstract class RestController<T extends RestEntity> {
      *
      * @param query
      *
-     * @returns {{pager: Pager; orders: Order[]; criteria: Criterion[]; mode: string; joins: Join[]; embeds: string[]; functions: string[]}}
+     * @returns {{pager: Pager; orders: Order[]; criteria: Criterion[]; mode: string; joins: Join[]; embeds: string[]; functions: string[]; query: string}}
      */
     protected getRESTParameters(
         query: any,
@@ -275,6 +272,7 @@ export default abstract class RestController<T extends RestEntity> {
         joins: Join[];
         embeds: string[];
         functions: string[];
+        query: string;
     } {
         const parameters = {
             pager: null,
@@ -284,7 +282,11 @@ export default abstract class RestController<T extends RestEntity> {
             joins: [],
             embeds: [],
             functions: [],
+            query: null,
         };
+
+        // Custom query
+        parameters.query = query._q || null;
 
         // Pagination
         const page = query._p;
@@ -345,6 +347,16 @@ export default abstract class RestController<T extends RestEntity> {
         }
 
         return parameters;
+    }
+
+    protected mutateRows(rows: RestEntity[], functions: string[]): void {
+        if (functions.length > 0) {
+            rows.forEach(row => {
+                functions.forEach(fn => {
+                    this.fillFnProperty(row, fn);
+                });
+            });
+        }
     }
 
     /**
