@@ -52,9 +52,11 @@ export default class RestService<T extends RestEntity> {
         const selection = [];
         embeds.forEach((property: string) => {
             if (property.indexOf('.') === -1) {
-                if (!joins.some(join => {
-                    return join.name === property;
-                })) {
+                if (
+                    !joins.some(join => {
+                        return join.name === property;
+                    })
+                ) {
                     property = 'o.' + property;
                     firstSelect = 'o.id';
                 }

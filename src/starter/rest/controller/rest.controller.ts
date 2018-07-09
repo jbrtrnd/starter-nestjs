@@ -78,7 +78,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Get()
-    search(@Request() request, @Response() response) {
+    search(@Request() request, @Response() response): void {
         const query = request.query;
 
         const rest = this.getRESTParameters(query);
@@ -117,7 +117,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Get(':id')
-    get(@Request() request, @Response() response) {
+    get(@Request() request, @Response() response): void {
         const params = request.params;
         const query = request.query;
 
@@ -190,7 +190,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Put(':id')
-    update(@Request() request, @Response() response) {
+    update(@Request() request, @Response() response): void {
         const params = request.params;
         const body = request.body;
         const query = request.query;
@@ -223,7 +223,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Delete(':id')
-    delete(@Request() request, @Response() response) {
+    delete(@Request() request, @Response() response): void {
         const params = request.params;
 
         this.service
@@ -249,6 +249,7 @@ export default abstract class RestController<T extends RestEntity> {
         } else if (error instanceof NotFoundException) {
             response.status(HttpStatus.NOT_FOUND);
         } else {
+            console.log(error);
             response.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -349,14 +350,20 @@ export default abstract class RestController<T extends RestEntity> {
         return parameters;
     }
 
+    /**
+     * Mutate rows before send response.
+     *
+     * @param {RestEntity[]} rows
+     * @param {string[]}     functions
+     */
     protected mutateRows(rows: RestEntity[], functions: string[]): void {
-        if (functions.length > 0) {
-            rows.forEach(row => {
+        rows.forEach(row => {
+            if (functions.length > 0) {
                 functions.forEach(fn => {
                     this.fillFnProperty(row, fn);
                 });
-            });
-        }
+            }
+        });
     }
 
     /**
