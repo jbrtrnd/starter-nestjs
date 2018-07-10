@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
 /**
- * Security service responsible to manage hashed passwords and JWT tokens.
+ * Service responsible to manage hashed passwords.
  *
  * @author Jules Bertrand <jules.brtrnd@gmail.com>
  */
 @Injectable()
-export default class SecurityService {
+export default class PasswordService {
     /**
      * Salt length for bcrypt algorithm.
      *

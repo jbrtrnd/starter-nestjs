@@ -4,7 +4,7 @@ import NotFoundException from '../../starter/rest/exception/not-found.exception'
 import RestService from '../../starter/rest/service/rest.service';
 import User from '../entity/user.entity';
 import WrongCredentialsException from '../exception/wrong-credentials.exception';
-import SecurityService from './security.service';
+import PasswordService from './security/password.service';
 
 /**
  * User service.
@@ -14,11 +14,10 @@ import SecurityService from './security.service';
 @Injectable()
 export default class UserService extends RestService<User> {
     /**
-     * @param {SecurityService} securityService
+     * @param {PasswordService} securityService
      * @param {Connection}      entityManager
      */
-    constructor(protected securityService: SecurityService,
-                protected entityManager: Connection) {
+    constructor(protected securityService: PasswordService, protected entityManager: Connection) {
         super(User, entityManager);
     }
 
@@ -47,20 +46,25 @@ export default class UserService extends RestService<User> {
      * @returns {Promise<User>}
      */
     authenticate(username: string, password: string): Promise<User> {
-        return this.repository.findOne({
-            username,
-        }, {
-            select: ['id', 'password'],
-        }).then(user => {
-            if (user) {
-                if (this.securityService.compare(password, user.password)) {
-                    return this.get(user.id);
+        return this.repository
+            .findOne(
+                {
+                    username,
+                },
+                {
+                    select: ['id', 'password'],
+                },
+            )
+            .then(user => {
+                if (user) {
+                    if (this.securityService.compare(password, user.password)) {
+                        return this.get(user.id);
+                    } else {
+                        throw new WrongCredentialsException();
+                    }
                 } else {
-                    throw new WrongCredentialsException();
+                    throw new NotFoundException();
                 }
-            } else {
-                throw new NotFoundException();
-            }
-        });
+            });
     }
 }
