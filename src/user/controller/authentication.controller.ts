@@ -1,7 +1,5 @@
 import { Controller, HttpStatus, Post, Request, Response } from '@nestjs/common';
 import NotFoundException from '../../starter/rest/exception/not-found.exception';
-import JwtExpiredException from '../exception/jwt-expired.exception';
-import JwtInvalidException from '../exception/jwt-invalid.exception';
 import WrongCredentialsException from '../exception/wrong-credentials.exception';
 import TokenService from '../service/security/token.service';
 import UserService from '../service/user.service';
@@ -52,9 +50,10 @@ export default class AuthenticationController {
             this.service
                 .authenticate(body.username, body.password)
                 .then(user => {
-                    const token = this.tokenService.sign({user: user.id});
+                    const token = this.tokenService.sign({ user: user.id });
                     response.json({
-                        user, token,
+                        user,
+                        token,
                     });
                 })
                 .catch(error => {
