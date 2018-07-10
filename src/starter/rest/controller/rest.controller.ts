@@ -249,7 +249,6 @@ export default abstract class RestController<T extends RestEntity> {
         } else if (error instanceof NotFoundException) {
             response.status(HttpStatus.NOT_FOUND);
         } else {
-            console.log(error);
             response.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 

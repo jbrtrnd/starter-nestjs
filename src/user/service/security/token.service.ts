@@ -42,4 +42,18 @@ export default class TokenService {
             }
         }
     }
+
+    /**
+     * Retrieve a =JWT from an HTTP request.
+     *
+     * @param request
+     *
+     * @returns {string}
+     */
+    retrieve(request: any): string {
+        const authorization = request.headers.authorization;
+        if (authorization) {
+            return authorization.replace('Bearer : ', '');
+        }
+    }
 }
