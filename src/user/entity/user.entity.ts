@@ -6,7 +6,7 @@ import RestEntity from '../../starter/rest/entity/rest.entity';
  *
  * @author Jules Bertrand <jules.brtrnd@gmail.com>
  */
-@Entity()
+@Entity('user_user')
 export default class User extends RestEntity {
     /**
      * User identifier.
