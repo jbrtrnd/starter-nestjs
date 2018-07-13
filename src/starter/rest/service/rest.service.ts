@@ -128,7 +128,6 @@ export default class RestService<T extends RestEntity> {
      */
     async create(data: any): Promise<T> {
         const entity: T = new this.entityClass();
-
         this.repository.merge(entity, data);
 
         await this.validateEntity(entity);

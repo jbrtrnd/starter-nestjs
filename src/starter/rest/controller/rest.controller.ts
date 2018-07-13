@@ -79,7 +79,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Get()
-    search(@Req() request: Request, @Res() response: Response) {
+    search(@Req() request: Request, @Res() response: Response): void {
         const query = request.query;
 
         const rest = this.getRESTParameters(query);
@@ -118,7 +118,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Get(':id')
-    get(@Req() request: Request, @Res() response: Response) {
+    get(@Req() request: Request, @Res() response: Response): void {
         const params = request.params;
         const query = request.query;
 
@@ -191,7 +191,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Put(':id')
-    update(@Req() request: Request, @Res() response: Response) {
+    update(@Req() request: Request, @Res() response: Response): void {
         const params = request.params;
         const body = request.body;
         const query = request.query;
@@ -224,7 +224,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Delete(':id')
-    delete(@Req() request: Request, @Res() response: Response) {
+    delete(@Req() request: Request, @Res() response: Response): void {
         const params = request.params;
 
         this.service
@@ -348,14 +348,20 @@ export default abstract class RestController<T extends RestEntity> {
         return parameters;
     }
 
+    /**
+     * Mutate rows before send response.
+     *
+     * @param {RestEntity[]} rows
+     * @param {string[]}     functions
+     */
     protected mutateRows(rows: RestEntity[], functions: string[]): void {
-        if (functions.length > 0) {
-            rows.forEach(row => {
+        rows.forEach(row => {
+            if (functions.length > 0) {
                 functions.forEach(fn => {
                     this.fillFnProperty(row, fn);
                 });
-            });
-        }
+            }
+        });
     }
 
     /**

@@ -10,4 +10,10 @@ module.exports = {
         entities: ['dist/**/**.entity{.ts,.js}'],
         synchronize: false,
     },
+    security: {
+        jwt: {
+            secret: 'ujrXKRv7q7sS3hFu',
+            expiration: '7d',
+        },
+    },
 };
