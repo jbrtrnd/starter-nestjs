@@ -1,4 +1,5 @@
-import { Controller, Delete, Get, HttpStatus, Post, Put, Request, Response } from '@nestjs/common';
+import { Controller, Delete, Get, HttpStatus, Post, Put, Req, Res } from '@nestjs/common';
+import { Response, Request } from 'express';
 import RestEntity from '../entity/rest.entity';
 import FieldValidationException from '../exception/field-validation.exception';
 import NotFoundException from '../exception/not-found.exception';
@@ -78,7 +79,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Get()
-    search(@Request() request, @Response() response) {
+    search(@Req() request: Request, @Res() response: Response) {
         const query = request.query;
 
         const rest = this.getRESTParameters(query);
@@ -88,7 +89,7 @@ export default abstract class RestController<T extends RestEntity> {
             .then((rows: T[]) => {
                 if (rest.pager.offset && rest.pager.limit) {
                     this.service.search(rest.criteria, [], [], rest.joins, rest.mode).then((total: T[]) => {
-                        response.header('X-REST-TOTAL', total.length);
+                        response.header('X-REST-TOTAL', total.length.toString());
                         this.mutateRows(rows, rest.functions);
                         response.json(rows);
                     });
@@ -117,7 +118,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Get(':id')
-    get(@Request() request, @Response() response) {
+    get(@Req() request: Request, @Res() response: Response) {
         const params = request.params;
         const query = request.query;
 
@@ -155,7 +156,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Post()
-    create(@Request() request, @Response() response): void {
+    create(@Req() request: Request, @Res() response: Response): void {
         const body = request.body;
 
         this.service
@@ -190,7 +191,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Put(':id')
-    update(@Request() request, @Response() response) {
+    update(@Req() request: Request, @Res() response: Response) {
         const params = request.params;
         const body = request.body;
         const query = request.query;
@@ -223,7 +224,7 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Response} response
      */
     @Delete(':id')
-    delete(@Request() request, @Response() response) {
+    delete(@Req() request: Request, @Res() response: Response) {
         const params = request.params;
 
         this.service
@@ -243,16 +244,14 @@ export default abstract class RestController<T extends RestEntity> {
      * @param {Error}    error
      * @param {Response} response
      */
-    protected errorHandler(error: Error, response): void {
+    protected errorHandler(error: Error, response: Response): void {
         if (error instanceof FieldValidationException) {
-            response.status(HttpStatus.UNPROCESSABLE_ENTITY);
+            response.status(HttpStatus.UNPROCESSABLE_ENTITY).send(error.message);
         } else if (error instanceof NotFoundException) {
-            response.status(HttpStatus.NOT_FOUND);
+            response.status(HttpStatus.NOT_FOUND).send();
         } else {
-            response.status(HttpStatus.INTERNAL_SERVER_ERROR);
+            response.status(HttpStatus.INTERNAL_SERVER_ERROR).send();
         }
-
-        response.send();
     }
 
     /**

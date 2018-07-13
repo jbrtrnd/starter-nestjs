@@ -5,6 +5,8 @@ import Criterion from './search/criterion';
 import Join from './search/join';
 import Order from './search/order';
 import Pager from './search/pager';
+import { validate } from 'class-validator';
+import FieldValidationException from '../exception/field-validation.exception';
 
 /**
  * Basic starter REST service used to manage an entity with the database.
@@ -52,9 +54,7 @@ export default class RestService<T extends RestEntity> {
         const selection = [];
         embeds.forEach((property: string) => {
             if (property.indexOf('.') === -1) {
-                if (!joins.some(join => {
-                    return join.name === property;
-                })) {
+                if (!joins.some(join => join.name === property)) {
                     property = 'o.' + property;
                     firstSelect = 'o.id';
                 }
@@ -126,11 +126,13 @@ export default class RestService<T extends RestEntity> {
      *
      * @returns {Promise<RestEntity>}
      */
-    create(data: any): Promise<T> {
+    async create(data: any): Promise<T> {
         const entity: T = new this.entityClass();
+
         this.repository.merge(entity, data);
 
-        // @TODO Fields validation --> send FieldValidationException
+        await this.validateEntity(entity);
+
         return this.save(entity);
     }
 
@@ -145,10 +147,11 @@ export default class RestService<T extends RestEntity> {
      * @returns {Promise<RestEntity>}
      */
     update(id: number, data: any, embeds: string[] = [], joins: Join[] = []): Promise<T> {
-        return this.get(id, embeds, joins).then((entity: T) => {
+        return this.get(id, embeds, joins).then(async (entity: T) => {
             this.repository.merge(entity, data);
 
-            // @TODO Fields validation --> send FieldValidationException
+            await this.validateEntity(entity);
+
             return this.save(entity);
         });
     }
@@ -163,6 +166,28 @@ export default class RestService<T extends RestEntity> {
     delete(id: number): Promise<any> {
         return this.get(id).then((entity: T) => {
             return this.repository.delete(entity.id);
+        });
+    }
+
+    /**
+     * Validate an entity.
+     *
+     * @param {RestEntity} entity
+     *
+     * @throws {FieldValidationException}
+     * @returns {Promise<void>}
+     */
+    validateEntity(entity: T): Promise<void> {
+        return validate(entity).then(errors => {
+            if (errors.length > 0) {
+                const messages = {};
+
+                for (const error of errors) {
+                    messages[error.property] = error.constraints;
+                }
+
+                throw new FieldValidationException(messages);
+            }
         });
     }
 }

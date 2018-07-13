@@ -37,7 +37,7 @@ export default class Criterion {
 
         this.parameter = this.generateRandom();
 
-        if (this.operator === 'in' || this.operator === 'notin') {
+        if (this.value instanceof String && (this.operator === 'in' || this.operator === 'notin')) {
             this.value = this.value.split(',');
         }
     }
