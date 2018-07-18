@@ -87,9 +87,9 @@ export default abstract class RestController<T extends RestEntity> {
         this.service
             .search(rest.criteria, rest.embeds, rest.orders, rest.joins, rest.mode, rest.pager)
             .then((rows: T[]) => {
-                if (rest.pager.offset && rest.pager.limit) {
+                if (typeof rest.pager.offset !== 'undefined' && typeof rest.pager.limit !== 'undefined') {
                     this.service.search(rest.criteria, [], [], rest.joins, rest.mode).then((total: T[]) => {
-                        response.header('X-REST-TOTAL', total.length.toString());
+                        response.header('Access-Control-Expose-Headers', 'X-REST-TOTAL');
                         this.mutateRows(rows, rest.functions);
                         response.json(rows);
                     });
