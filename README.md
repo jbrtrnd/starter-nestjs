@@ -149,13 +149,13 @@ See [Create your own REST api](#create-your-own-rest-api) section to create your
 When creating an entity, a controller and some routes linked to this controller functions, you can inherit some Starter 
 classes that will allow you to simply build a REST api for this entity :
 
-* ``starter/rest/entity/rest.entity.ts``
+* ``starter/rest/entity/rest.entity.abstract.ts``
 * ``starter/rest/controller/rest.controller.ts``
 * ``starter/rest/service/rest.service.ts``
 
 The ``RestController`` is designed to receive GET, PUT, POST and DELETE http requests and will send back to you some JSON response
 with an HTTP status code representing the final state of your request. It will needs a link to the entity class of your 
-``RestEntity``.
+``RestEntityAbstract``.
 
 A ``RestController`` correctly mapped to its routes will produce the following api :
 
